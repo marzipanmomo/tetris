@@ -1,2 +1,14 @@
 ﻿  main.cpp
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,66): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,66): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,66): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,66): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,66): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,52): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,52): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,52): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(221,52): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(226,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(226,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   finalproject2.vcxproj -> C:\Users\mariy\source\repos\finalproject2\x64\Debug\finalproject2.exe
