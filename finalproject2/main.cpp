@@ -5,10 +5,11 @@ using namespace std;
 
 //global variables or constants
 //create window, user makes full screen to play, closes to end program
-//sf::RenderWindow window(sf::VideoMode(300, 600), "Tetris Game");
 sf::Event event;
-sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "tetris", sf::Style::Default);
-sf::RectangleShape background(sf::Vector2f(240.f, 520.f));
+sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
+sf::RectangleShape background(sf::Vector2f(340.f, 600.f));
+sf::Font font;
+sf::Text tetris, play, highscores, instructions;
 
 //function and class prototypes
 class Tetromino;
@@ -79,6 +80,7 @@ public:
 
 //functions
 Tetromino* generateRandomPiece();
+int menu();
 
 int main(){
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
@@ -86,8 +88,38 @@ int main(){
     background.setOutlineColor(sf::Color(143, 188, 143));
     background.setOutlineThickness(2.f);
     background.setFillColor(sf::Color::Black);
-    background.setPosition(160, 20);
+    background.setPosition(120, 60);
     //*/
+    
+    //font and text
+    try {
+        if (!font.loadFromFile("Pixellettersfull.ttf")) {
+            throw 420;
+        }
+    }
+    catch (int fileNotFound) {
+        cout << "font file not found" << endl;
+    }
+    tetris.setFont(font);
+    tetris.setString("Tetris");
+    tetris.setCharacterSize(60);
+    tetris.setFillColor(sf::Color::White);
+    tetris.setPosition(400, 100);
+    play.setFont(font);
+    play.setString("Play");
+    play.setCharacterSize(45);
+    play.setFillColor(sf::Color::Cyan);
+    play.setPosition(400, 200);
+    highscores.setFont(font);
+    highscores.setString("High Scores");
+    highscores.setCharacterSize(45);
+    highscores.setFillColor(sf::Color::White);
+    highscores.setPosition(400, 300);
+    instructions.setFont(font);
+    instructions.setString("Instructions");
+    instructions.setCharacterSize(45);
+    instructions.setFillColor(sf::Color::White);
+    instructions.setPosition(400, 400);
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true); 
 
@@ -99,15 +131,27 @@ int main(){
     float delay = 0.5;//you can change this to decrease or increase the speed of the falling of shape.
 
     currentPiece = generateRandomPiece();
-    int startX = 8;
-    int startY = 1;
+    int startX = 6;
+    int startY = 3;
     currentPiece->setPosition(startX, startY);
     currentPiece->getPosition(startX, startY);
     sf::Clock clock;
     //This segment handles time management in game's main loop.
 
     //menu loop
-    
+    int choice = 3;
+    while (choice == 2 || choice == 3) {
+        //if you view highscores or instructions, it will display menu again, if you press play it will exit menu loop
+        choice = menu();
+
+        if (choice == 2) { //highscores
+            //view highscores
+        }
+        if (choice == 3) { //instructions
+            //display instructions
+        }
+
+    }
     //game loop
     while (window.isOpen())
     {
@@ -206,6 +250,51 @@ Tetromino* generateRandomPiece() {
         return new I();
     }
 }
+int menu() {
+    int choice = 1;
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter) { //enter
+                    return choice;
+                }
+
+                else if (choice == 1 && event.key.code == sf::Keyboard::Down) { //play -> highscores
+                    play.setFillColor(sf::Color::White);
+                    highscores.setFillColor(sf::Color::Cyan);
+                    choice = 2;
+                }
+
+                else if (choice == 2 && event.key.code == sf::Keyboard::Down) { //highscores -> instructions
+                    highscores.setFillColor(sf::Color::White);
+                    instructions.setFillColor(sf::Color::Cyan);
+                    choice = 3;
+                }
+                else if (choice == 3 && event.key.code == sf::Keyboard::Up) { //instructions -> highscores
+                    instructions.setFillColor(sf::Color::White);
+                    highscores.setFillColor(sf::Color::Cyan);
+                    choice = 2;
+                }
+
+                else if (choice == 2 && event.key.code == sf::Keyboard::Up) { //highscores -> play
+                    highscores.setFillColor(sf::Color::White);
+                    play.setFillColor(sf::Color::Cyan);
+                    choice = 1;
+                }
+            }
+            else if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+            window.clear();
+            window.draw(tetris);
+            window.draw(play);
+            window.draw(highscores);
+            window.draw(instructions);
+            window.display();
+        }
+    }
+}
+
 
 //member functions
 //base class
