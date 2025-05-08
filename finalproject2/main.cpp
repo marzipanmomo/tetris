@@ -9,7 +9,7 @@ sf::Event event;
 sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
 sf::RectangleShape background(sf::Vector2f(340.f, 600.f));
 sf::Font font;
-sf::Text tetris, play, highscores, instructions;
+sf::Text tetris, play, highscores, instructions, paused, resume, quit;
 
 //function and class prototypes
 class Tetromino;
@@ -80,50 +80,24 @@ public:
 
 //functions
 Tetromino* generateRandomPiece();
+void initialiseTextObjects();
 int menu();
+void pause();
 
 int main(){
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
-    ///*colours
+    
+    //background
     background.setOutlineColor(sf::Color(143, 188, 143));
     background.setOutlineThickness(2.f);
     background.setFillColor(sf::Color::Black);
     background.setPosition(120, 60);
-    //*/
-    
-    //font and text
-    try {
-        if (!font.loadFromFile("Pixellettersfull.ttf")) {
-            throw 420;
-        }
-    }
-    catch (int fileNotFound) {
-        cout << "font file not found" << endl;
-    }
-    tetris.setFont(font);
-    tetris.setString("Tetris");
-    tetris.setCharacterSize(60);
-    tetris.setFillColor(sf::Color::White);
-    tetris.setPosition(400, 100);
-    play.setFont(font);
-    play.setString("Play");
-    play.setCharacterSize(45);
-    play.setFillColor(sf::Color::Cyan);
-    play.setPosition(400, 200);
-    highscores.setFont(font);
-    highscores.setString("High Scores");
-    highscores.setCharacterSize(45);
-    highscores.setFillColor(sf::Color::White);
-    highscores.setPosition(400, 300);
-    instructions.setFont(font);
-    instructions.setString("Instructions");
-    instructions.setCharacterSize(45);
-    instructions.setFillColor(sf::Color::White);
-    instructions.setPosition(400, 400);
+  
+    initialiseTextObjects();
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true); 
 
-    //this is upto us actually,represents the shape size,the 20 pixels seeemed to be a suitable size so i went for it.
+    //this represents the shape size (20 pixels)
     const int cellSize = 20;
 
     Tetromino* currentPiece = nullptr;
@@ -198,8 +172,8 @@ int main(){
                 }
 
                 //check esc pressed- pause screen
-                else if (event.key.scancode == sf::Keyboard::Scan::Escape){
-                    //pause screen
+                else if (event.key.code == sf::Keyboard::Escape){
+                    pause();
                 }
 
             }
@@ -250,6 +224,57 @@ Tetromino* generateRandomPiece() {
         return new I();
     }
 }
+void initialiseTextObjects() {
+    try {
+        if (!font.loadFromFile("Pixellettersfull.ttf")) {
+            throw 420;
+        }
+    }
+    catch (int fileNotFound) {
+        cout << "font file not found" << endl;
+    }
+    tetris.setFont(font);
+    tetris.setString("Tetris");
+    tetris.setCharacterSize(60);
+    tetris.setFillColor(sf::Color::White);
+    tetris.setPosition(400, 100);
+
+    play.setFont(font);
+    play.setString("Play");
+    play.setCharacterSize(45);
+    play.setFillColor(sf::Color::Cyan);
+    play.setPosition(400, 200);
+
+    highscores.setFont(font);
+    highscores.setString("High Scores");
+    highscores.setCharacterSize(45);
+    highscores.setFillColor(sf::Color::White);
+    highscores.setPosition(400, 300);
+
+    instructions.setFont(font);
+    instructions.setString("Instructions");
+    instructions.setCharacterSize(45);
+    instructions.setFillColor(sf::Color::White);
+    instructions.setPosition(400, 400);
+
+    paused.setFont(font);
+    paused.setString("Paused");
+    paused.setCharacterSize(60);
+    paused.setFillColor(sf::Color::White);
+    paused.setPosition(400, 100);
+
+    resume.setFont(font);
+    resume.setString("Resume");
+    resume.setCharacterSize(45);
+    resume.setFillColor(sf::Color::Cyan);
+    resume.setPosition(400, 250);
+
+    quit.setFont(font);
+    quit.setString("Quit");
+    quit.setCharacterSize(45);
+    quit.setFillColor(sf::Color::White);
+    quit.setPosition(400, 350);
+}
 int menu() {
     int choice = 1;
     while (window.isOpen()) {
@@ -294,7 +319,41 @@ int menu() {
         }
     }
 }
-
+void pause() {
+    int choice = 1;
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (choice == 1 && event.key.code == sf::Keyboard::Down) { //resume -> quit
+                    resume.setFillColor(sf::Color::White);
+                    quit.setFillColor(sf::Color::Cyan);
+                    choice = 2;
+                }
+                if (choice == 2 && event.key.code == sf::Keyboard::Up) {
+                    quit.setFillColor(sf::Color::White);
+                    resume.setFillColor(sf::Color::Cyan);
+                    choice = 1;
+                }
+                if (event.key.code == sf::Keyboard::Enter) {
+                    if (choice == 1) {
+                        return;
+                    }
+                    else if (choice == 2) {
+                        window.close();
+                    }
+                }
+                else if (event.type == sf::Event::Closed) {
+                    window.close();
+                }
+            }
+        }
+        window.clear();
+        window.draw(paused);
+        window.draw(resume);
+        window.draw(quit);
+        window.display();
+    }
+}
 
 //member functions
 //base class
