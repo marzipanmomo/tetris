@@ -9,7 +9,7 @@ sf::Event event;
 sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
 sf::RectangleShape background(sf::Vector2f(340.f, 600.f));
 sf::Font font;
-sf::Text tetris, play, highscores, instructions, paused, resume, quit;
+sf::Text tetris, play, highscores, instructions, paused, resume, quit, controlKeys;
 
 //function and class prototypes
 class Tetromino;
@@ -83,6 +83,10 @@ Tetromino* generateRandomPiece();
 void initialiseTextObjects();
 int menu();
 void pause();
+void displayScore();
+void displayHighScores();
+void addScore();
+void displayInstructions();
 
 int main(){
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
@@ -122,7 +126,7 @@ int main(){
             //view highscores
         }
         if (choice == 3) { //instructions
-            //display instructions
+            displayInstructions();
         }
 
     }
@@ -274,6 +278,12 @@ void initialiseTextObjects() {
     quit.setCharacterSize(45);
     quit.setFillColor(sf::Color::White);
     quit.setPosition(400, 350);
+
+    controlKeys.setFont(font);
+    controlKeys.setString("Left arrow - Move left\nRight arrow - Move right\nUp arrow - Rotate right\nZ - Rotate left\nDown arrow - Soft drop\nSpace - Hard drop\nEsc - Pause\n\nPress Enter to continue");
+    controlKeys.setCharacterSize(35);
+    controlKeys.setFillColor(sf::Color::White);
+    controlKeys.setPosition(350, 150);
 }
 int menu() {
     int choice = 1;
@@ -351,6 +361,23 @@ void pause() {
         window.draw(paused);
         window.draw(resume);
         window.draw(quit);
+        window.display();
+    }
+}
+void displayInstructions() {
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter) {
+                    return;
+                } 
+            }
+            else if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+        window.clear();
+        window.draw(controlKeys);
         window.display();
     }
 }
