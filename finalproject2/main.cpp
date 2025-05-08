@@ -9,7 +9,11 @@ sf::Event event;
 sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
 sf::RectangleShape background(sf::Vector2f(340.f, 600.f));
 sf::Font font;
-sf::Text tetris, play, highscores, instructions, paused, resume, quit, controlKeys;
+sf::Text tetris, play, highscores, instructions; //menu text objects
+sf::Text paused, resume, quit; //pause screen text objects
+sf::Text controlKeys; //instructions screen text object
+sf::Text score; //current score text object
+sf::Text highscoresList; //high scores screen text object
 
 //function and class prototypes
 class Tetromino;
@@ -91,13 +95,14 @@ void displayInstructions();
 int main(){
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
     
+    initialiseTextObjects();
+
     //background
     background.setOutlineColor(sf::Color(143, 188, 143));
     background.setOutlineThickness(2.f);
     background.setFillColor(sf::Color::Black);
     background.setPosition(120, 60);
   
-    initialiseTextObjects();
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true); 
 
@@ -229,6 +234,7 @@ Tetromino* generateRandomPiece() {
     }
 }
 void initialiseTextObjects() {
+    //these settings wont change
     try {
         if (!font.loadFromFile("Pixellettersfull.ttf")) {
             throw 420;
@@ -246,19 +252,16 @@ void initialiseTextObjects() {
     play.setFont(font);
     play.setString("Play");
     play.setCharacterSize(45);
-    play.setFillColor(sf::Color::Cyan);
     play.setPosition(400, 200);
 
     highscores.setFont(font);
     highscores.setString("High Scores");
     highscores.setCharacterSize(45);
-    highscores.setFillColor(sf::Color::White);
     highscores.setPosition(400, 300);
 
     instructions.setFont(font);
     instructions.setString("Instructions");
     instructions.setCharacterSize(45);
-    instructions.setFillColor(sf::Color::White);
     instructions.setPosition(400, 400);
 
     paused.setFont(font);
@@ -270,13 +273,11 @@ void initialiseTextObjects() {
     resume.setFont(font);
     resume.setString("Resume");
     resume.setCharacterSize(45);
-    resume.setFillColor(sf::Color::Cyan);
     resume.setPosition(400, 250);
 
     quit.setFont(font);
     quit.setString("Quit");
     quit.setCharacterSize(45);
-    quit.setFillColor(sf::Color::White);
     quit.setPosition(400, 350);
 
     controlKeys.setFont(font);
@@ -284,9 +285,15 @@ void initialiseTextObjects() {
     controlKeys.setCharacterSize(35);
     controlKeys.setFillColor(sf::Color::White);
     controlKeys.setPosition(350, 150);
+    controlKeys.setLineSpacing(1.2);
 }
 int menu() {
     int choice = 1;
+    //initial colours, reset every time menu called
+    play.setFillColor(sf::Color::Cyan);
+    highscores.setFillColor(sf::Color::White);
+    instructions.setFillColor(sf::Color::White);
+
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::KeyPressed) {
@@ -331,6 +338,9 @@ int menu() {
 }
 void pause() {
     int choice = 1;
+    //initial colours
+    resume.setFillColor(sf::Color::Cyan);
+    quit.setFillColor(sf::Color::White);
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::KeyPressed) {
