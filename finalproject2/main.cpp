@@ -107,11 +107,13 @@ int main(){
     initialiseTextObjects();
 
     //background
-    background.setOutlineColor(sf::Color(176, 224, 230));
+    background.setOutlineColor(sf::Color::Cyan);
     background.setOutlineThickness(5.f);
     background.setFillColor(sf::Color::Black);
     background.setPosition(backgroundStartX, backgroundStartY);
-    grid.setFillColor(sf::Color(0, 0, 54));
+    grid.setFillColor(sf::Color(25, 25, 112));
+    grid.setOutlineThickness(2.f);
+    grid.setOutlineColor(sf::Color::Black);
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true); 
 
