@@ -1,17 +1,19 @@
 ﻿  main.cpp
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(288,32): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(243,16): warning C4101: 'fileNotFound': unreferenced local variable
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,66): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,66): warning C4244:         with
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,66): warning C4244:         [
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,66): warning C4244:             T=float
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,66): warning C4244:         ]
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,52): warning C4244:         with
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,52): warning C4244:         [
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,52): warning C4244:             T=float
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(406,52): warning C4244:         ]
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(411,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(411,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(338,1): warning C4715: 'menu': not all control paths return a value
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(167,86): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(167,51): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(300,32): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(255,16): warning C4101: 'fileNotFound': unreferenced local variable
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,66): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,66): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,66): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,66): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,66): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,52): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,52): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,52): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(418,52): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(423,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(423,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(350,1): warning C4715: 'menu': not all control paths return a value
   finalproject2.vcxproj -> C:\Users\mariy\source\repos\finalproject2\x64\Debug\finalproject2.exe

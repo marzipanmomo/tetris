@@ -4,10 +4,19 @@
 using namespace std;
 
 //global variables or constants
+
+//this represents the shape size (20 pixels)
+const int cellSize = 30;
+//board
+const int columns = 10;
+const int rows = 20;
+const int backgroundStartX = 120;
+const int backgroundStartY = 60;
+
 //create window, user makes full screen to play, closes to end program
 sf::Event event;
 sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
-sf::RectangleShape background(sf::Vector2f(340.f, 600.f));
+sf::RectangleShape background(sf::Vector2f(300.f, 600.f)), grid(sf::Vector2f(cellSize - 1, cellSize - 1));
 sf::Font font;
 sf::Text tetris, play, highscores, instructions; //menu text objects
 sf::Text paused, resume, quit; //pause screen text objects
@@ -98,16 +107,13 @@ int main(){
     initialiseTextObjects();
 
     //background
-    background.setOutlineColor(sf::Color(143, 188, 143));
-    background.setOutlineThickness(2.f);
+    background.setOutlineColor(sf::Color(176, 224, 230));
+    background.setOutlineThickness(5.f);
     background.setFillColor(sf::Color::Black);
-    background.setPosition(120, 60);
-  
+    background.setPosition(backgroundStartX, backgroundStartY);
+    grid.setFillColor(sf::Color(0, 0, 54));
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true); 
-
-    //this represents the shape size (20 pixels)
-    const int cellSize = 20;
 
     Tetromino* currentPiece = nullptr;
     float timer = 0;
@@ -156,6 +162,12 @@ int main(){
         //redrawing background
         window.clear(sf::Color::Black);//clearing the screen
         window.draw(background);//draw the background
+        for (int i = 0; i < 20; ++i) {
+            for (int j = 0; j < 10; ++j) {
+                grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
+                window.draw(grid);
+            }
+        }
         currentPiece->draw(window, cellSize);//calling the function to draw the shape on screen finally..
         window.display();//displaying the frames.
 
