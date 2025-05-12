@@ -49,7 +49,7 @@ protected:
 public:
     Tetromino();
     virtual ~Tetromino();
-    virtual bool rotate(string) = 0;
+    virtual bool rotate() = 0;
     bool movable(int newX, int newY);
     bool isOccupied(int x, int y);
     virtual int getX();
@@ -69,37 +69,37 @@ public:
 class O :public Tetromino {
 public:
     O();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 class I :public Tetromino {
 public:
     I();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 class S :public Tetromino {
 public:
     S();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 class Z :public Tetromino {
 public:
     Z();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 class L :public Tetromino {
 public:
     L();
-    bool rotate(string) override;
+    bool rotate();
 };
 class J :public Tetromino {
 public:
     J();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 class T :public Tetromino {
 public:
     T();
-    bool rotate(string) override;
+    bool rotate() override;
 };
 
 //functions
@@ -114,10 +114,8 @@ void displayInstructions();
 bool valid_position(Tetromino&);
 void holdPiece(Tetromino&);
 void gameOver();
-void lineClearing();
 
 int main() {
-    int iterations = 0;
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
 
     //initialising text and background settings
@@ -179,9 +177,9 @@ int main() {
     //game loop
     while (window.isOpen()) {
         //to stop pieces falling too fast and prevent flickering
-        float time = clock.getElapsedTime().asSeconds();
-        clock.restart();
-        timer += time;
+       float time = clock.getElapsedTime().asSeconds();
+    clock.restart();
+    timer += time;
 
         //redrawing background
         window.clear(sf::Color::Black);//clearing the screen
@@ -202,7 +200,8 @@ int main() {
         changeScore();
 
         while (window.pollEvent(event)) {
-            
+            // modified it a bit so it checks for collision first then moves
+
             if (event.type == sf::Event::KeyPressed) {
                 // first checking if movement is valid then we can move according to the key pressed
                 if (event.key.code == sf::Keyboard::Left) {
@@ -221,15 +220,9 @@ int main() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::Up) {
-                    currentPiece->rotate("right");
-                }
-
-                if (event.key.code == sf::Keyboard::Key::Z) {
-                    currentPiece->rotate("left");
-                }
-
-                if (event.key.code == sf::Keyboard::Space) {
-                    //hard drop
+                    currentPiece->rotate();
+                    if (valid_position(*currentPiece)) {}
+                    else {}
                 }
 
                 //pause screen
@@ -239,24 +232,45 @@ int main() {
             }
 
             else if (event.type == sf::Event::Closed) {
-                addScore();
                 gameOver();
                 window.close();
             }
 
             //downwards movement of tetrominoes
-            //Natural movement down
+           // Natural movement down
             if (timer > delay) {
-                timer = 0;
                 if (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
                     currentPiece->moveDown();
                 }
                 else {
                     // Lock the piece in place
                     holdPiece(*currentPiece);
-                    lineClearing();
 
-                    //deallocate memory and generate new tetromino
+                    // Clear completed lines
+                    for (int i = rows - 1; i >= 0; --i) {
+                        bool fullLine = true;
+                        for (int j = 0; j < columns; ++j) {
+                            if (gameBoard[i][j] == gridColor) {
+                                fullLine = false;
+                                break;
+                            }
+                        }
+                        if (fullLine) {
+                            // Move all rows above down by one
+                            for (int k = i; k > 0; --k) {
+                                for (int j = 0; j < columns; ++j) {
+                                    gameBoard[k][j] = gameBoard[k - 1][j];
+                                }
+                            }
+                            // Clear the top row
+                            for (int j = 0; j < columns; ++j) {
+                                gameBoard[0][j] = gridColor;
+                            }
+                            i++; // Recheck the same row after shifting
+                            currentScore += 100;
+                        }
+                    }
+
                     delete currentPiece;
                     currentPiece = generateRandomPiece();
                     currentPiece->setPosition(columns / 2 - 2, 0);
@@ -264,13 +278,16 @@ int main() {
                     // Check for game over
                     if (!valid_position(*currentPiece)) {
                         gameOver();
-                        addScore();
                         window.close();
                         return 0;
                     }
                 }
+                timer = 0;
             }
         }
+        //check win/lose condition
+        //gameOver();
+        //addScore(currentScore);
     }
     return 0;
 }
@@ -305,7 +322,6 @@ Tetromino* generateRandomPiece() {
         return new I();
     }
 }
-
 void initialiseGraphicsObjects() {
     //background
     background.setOutlineColor(sf::Color(176, 224, 230));
@@ -394,7 +410,6 @@ void initialiseGraphicsObjects() {
     highscoresList.setPosition(350, 150);
     highscoresList.setLineSpacing(1.3);
 }
-
 int menu() {
     int choice = 1;
     //initial colours, reset every time menu called
@@ -444,7 +459,6 @@ int menu() {
         }
     }
 }
-
 void pause() {
     int choice = 1;
     //initial colours
@@ -468,12 +482,11 @@ void pause() {
                         return;
                     }
                     else if (choice == 2) {
-                        addScore();
                         gameOver();
+                        window.close();
                     }
                 }
                 else if (event.type == sf::Event::Closed) {
-                    addScore();
                     window.close();
                 }
             }
@@ -485,7 +498,6 @@ void pause() {
         window.display();
     }
 }
-
 void displayInstructions() {
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
@@ -503,7 +515,6 @@ void displayInstructions() {
         window.display();
     }
 }
-
 bool valid_position(Tetromino& piece) {
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
@@ -515,7 +526,7 @@ bool valid_position(Tetromino& piece) {
                     return false;
                 }
 
-                //changing from back color to our grid color detection
+               //changing from back color to our grid color detection
                 if (boardY >= 0 && gameBoard[boardY][boardX] != gridColor) {
                     return false;
                 }
@@ -524,7 +535,6 @@ bool valid_position(Tetromino& piece) {
     }
     return true;
 }
-
 void holdPiece(Tetromino& piece) {
     int x, y;
     piece.getPosition(x, y);
@@ -540,7 +550,6 @@ void holdPiece(Tetromino& piece) {
         }
     }
 }
-
 void gameOver() {
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
@@ -558,14 +567,12 @@ void gameOver() {
         window.display();
     }
 }
-
 void changeScore() {
     if (previousScore != currentScore) {
         previousScore = currentScore;
         scoreVal.setString(to_string(currentScore));
     }
 }
-
 void displayHighScores() {
     string list;
     for (int i = 0; i < 5 && highScores[i] != 0; i++) {
@@ -591,70 +598,33 @@ void displayHighScores() {
         window.display();
     }
 }
-
 void addScore() {
-    int tempScores[6];
+    int scores[6];
     int temp;
 
     for (int i = 0; i < 5; i++) {
-        tempScores[i] = highScores[i];
+        scores[i] = highScores[i];
     }
-    tempScores[5] = currentScore;
+    scores[5] = currentScore;
+    //copy high scores array and new score to new array
 
-    //bubble sort previous values as well as current score
+    //bubble sort
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 5 - i; j++) {
-            if (tempScores[j] < tempScores[j + 1]) {
-                temp = tempScores[j];
-                tempScores[j] = tempScores[j + 1];
-                tempScores[j + 1] = temp;
+            if (scores[j] < scores[j + 1]) {
+                temp = scores[j];
+                scores[j] = scores[j + 1];
+                scores[j + 1] = temp;
             }
         }
     }
 
     //write first 5 scores to file
-    try {
-        ofstream outFile("HighScores.txt");
-        if (outFile) {
-            for (int i = 0; i < 5; i++) {
-                outFile << tempScores[i] << " ";
-            }
-            outFile.close();
-        }
-        else {
-            throw 420;
-        }
+    ofstream outFile("HighScores.txt");
+    for (int i = 0; i < 5; i++) {
+        outFile << scores[i] << " ";
     }
-    catch (int fileNotFound) {
-        cout << "HighScores.txt not found" << endl;
-    }
-}
-
-void lineClearing() {
-    // Clear completed lines
-    for (int i = rows - 1; i >= 0; --i) {
-        bool fullLine = true;
-        for (int j = 0; j < columns; ++j) {
-            if (gameBoard[i][j] == gridColor) {
-                fullLine = false;
-                break;
-            }
-        }
-        if (fullLine) {
-            // Move all rows above down by one
-            for (int k = i; k > 0; --k) {
-                for (int j = 0; j < columns; ++j) {
-                    gameBoard[k][j] = gameBoard[k - 1][j];
-                }
-            }
-            // Clear the top row
-            for (int j = 0; j < columns; ++j) {
-                gameBoard[0][j] = gridColor;
-            }
-            i++; // Recheck the same row after shifting
-            currentScore += 100;
-        }
-    }
+    outFile.close();
 }
 
 //member functions
@@ -698,7 +668,6 @@ void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
         }
     }
 }
-
 //move functions
 void Tetromino::moveRight() {
     if (movable(x + 1, y))
@@ -770,7 +739,7 @@ O::O() {
     shape[1][0] = 1;
     shape[1][1] = 1;
 }
-bool O::rotate(string direction) {
+bool O::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -778,20 +747,12 @@ bool O::rotate(string direction) {
             oldShape[i][j] = shape[i][j];
         }
     }
-    int newShape[4][4] = { 0 };
+
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -822,7 +783,7 @@ I::I() {
     shape[1][2] = 1;
     shape[1][3] = 1;
 }
-bool I::rotate(string direction) {
+bool I::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -831,20 +792,11 @@ bool I::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -867,7 +819,6 @@ bool I::rotate(string direction) {
     }
     return true;
 }
-
 S::S() {
     color = sf::Color::Green;
     shape[0][1] = 1;
@@ -875,7 +826,7 @@ S::S() {
     shape[1][0] = 1;
     shape[1][1] = 1;
 }
-bool S::rotate(string direction) {
+bool S::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -884,20 +835,11 @@ bool S::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -920,7 +862,6 @@ bool S::rotate(string direction) {
     }
     return true;
 }
-
 Z::Z() {
     color = sf::Color::Red;
     shape[0][0] = 1;
@@ -928,7 +869,7 @@ Z::Z() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool Z::rotate(string direction) {
+bool Z::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -937,20 +878,11 @@ bool Z::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -973,7 +905,6 @@ bool Z::rotate(string direction) {
     }
     return true;
 }
-
 L::L() {
     color = sf::Color::Cyan;
     shape[0][2] = 1;
@@ -981,7 +912,7 @@ L::L() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool L::rotate(string direction) {
+bool L::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -990,20 +921,11 @@ bool L::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -1026,7 +948,6 @@ bool L::rotate(string direction) {
     }
     return true;
 }
-
 J::J() {
     color = sf::Color::Blue;
     //the ones represent that what place of our base class matrix contains the blocks,simply that these boxes constitute the main shape(hard coding :p)
@@ -1035,7 +956,7 @@ J::J() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool J::rotate(string direction) {
+bool J::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -1044,20 +965,11 @@ bool J::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
@@ -1088,7 +1000,7 @@ T::T() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool T::rotate(string direction) {
+bool T::rotate() {
     // Save current shape
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
@@ -1097,20 +1009,11 @@ bool T::rotate(string direction) {
         }
     }
 
-    int newShape[4][4] = { 0 };
     // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
+    int newShape[4][4] = { 0 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            newShape[i][j] = oldShape[3 - j][i];
         }
     }
 
