@@ -4,23 +4,21 @@
 using namespace std;
 
 //global variables or constants
-
-//this represents the shape size (30 pixels)
-const int cellSize = 30;
+const int cellSize = 30; //this represents the shape size (30 pixels)
 //board
 const int columns = 10;
 const int rows = 20;
 const int backgroundStartX = 120;
 const int backgroundStartY = 60;
 sf::Color gameBoard[rows][columns];
+const sf::Color gridColor = sf::Color(25, 25, 112);
 
 // initializing the grid
 int currentScore = 0;
 int previousScore = 0;
 
-//create window, user makes full screen to play, closes to end program
+sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default); //create window, user makes full screen to play, closes to end program
 sf::Event event;
-sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
 sf::RectangleShape background(sf::Vector2f(300.f, 600.f)), grid(sf::Vector2f(cellSize - 1, cellSize - 1));
 sf::Font font;
 sf::Text tetris, play, highscores, instructions; //menu text objects
@@ -28,7 +26,7 @@ sf::Text paused, resume, quit; //pause screen text objects
 sf::Text controlKeys; //instructions screen text object
 sf::Text score, scoreVal; //current score text object
 sf::Text highscoresList; //high scores screen text object
-sf::Text gameover;
+sf::Text gameover; //game over text object
 
 //function and class prototypes
 class Tetromino;
@@ -139,7 +137,7 @@ int main() {
     // Initialize gameBoard with grid colour
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < columns; ++j) {
-            gameBoard[i][j] = sf::Color(25, 25, 112);
+            gameBoard[i][j] = gridColor;
         }
     }
 
@@ -173,6 +171,7 @@ int main() {
                 window.draw(grid);
             }
         }
+        //redrawing tetromino
         currentPiece->draw(window, cellSize);
         window.draw(score);
         window.draw(scoreVal);
@@ -226,12 +225,14 @@ int main() {
                     currentPiece->moveDown();
                 }
                 else {
+                    //keeping tetrominoes on the screen
                     holdPiece(*currentPiece);
+
                     // Clear completed lines after placing the piece
                     for (int i = rows - 1; i >= 0; --i) {
                         bool fullLine = true;
                         for (int j = 0; j < columns; ++j) {
-                            if (gameBoard[i][j] == sf::Color::Black) {
+                            if (gameBoard[i][j] == gridColor) {
                                 fullLine = false;
                                 break;
                             }
@@ -245,7 +246,7 @@ int main() {
                             }
                             // Clear the top row
                             for (int j = 0; j < columns; ++j) {
-                                gameBoard[0][j] = sf::Color::Black;
+                                gameBoard[0][j] = gridColor;
                             }
                             i++; // Recheck the same row after shifting
                             currentScore += 100;
@@ -269,8 +270,8 @@ int main() {
                             }
                         }
                         window.display();
-                        // game over
-                        window.close(); 
+                        //game over
+                        //window.close(); 
                     }
                 }
                 timer = 0;
@@ -317,7 +318,7 @@ void initialiseGraphicsObjects() {
     background.setOutlineThickness(5.f);
     background.setFillColor(sf::Color::Black);
     background.setPosition(backgroundStartX, backgroundStartY);
-    grid.setFillColor(sf::Color(25, 25, 112));
+    grid.setFillColor(gridColor);
     grid.setOutlineThickness(1.f);
     grid.setOutlineColor(sf::Color::Black);
 
@@ -565,23 +566,23 @@ Tetromino::Tetromino() : x(0), y(0), color(sf::Color::Green) {  // Or any color
         }
     }
 }
-
 Tetromino::~Tetromino() {}
-void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
-    sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
 
+void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
+        //draw over previous space with grid colour
         for (int i = 0; i < rows; ++i) {
             for (int j = 0; j < columns; ++j) {
-                if (gameBoard[i][j] != sf::Color(25, 25, 112)) {
-                    grid.setPosition(backgroundStartX + (j * cellSize),
-                        backgroundStartY + (i * cellSize));
-
-                    grid.setFillColor(gameBoard[i][j]);
-                    window.draw(grid);
+                if (gameBoard[i][j] != gridColor) {
+                    sf::RectangleShape redrawGrid(sf::Vector2f(cellSize - 1, cellSize - 1));
+                    redrawGrid.setFillColor(gameBoard[i][j]);
+                    redrawGrid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
+                    window.draw(redrawGrid);
                 }
             }
         }
 
+        //draw tetromino in new space
+        sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
         block.setFillColor(color);
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) { 
