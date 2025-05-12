@@ -482,7 +482,7 @@ void displayHighScores(int highScores[5]) {
 	}
 }
 
-void checkHighScores(int highScores[5], int newScore) {
+void addScore(int highScores[5], int newScore) {
 	int scores[6];
 	int temp;
 
@@ -682,7 +682,7 @@ int main() {
 					}
 					else if (choice == 2) { //save and quit
 						gameOver = true;
-						checkHighScores(highScores, score);
+						addScore(highScores, score);
 						saveGame(score, lives, alienX, alienY, alienDirection, alienSteps, bulletX, bulletY, rocketX, rocketY, aliens, aliensCoordinates);
 						system("cls");
 						break;
@@ -730,7 +730,7 @@ int main() {
 			gameOver = true;
 			gameOverScreen(true);
 		}
-		checkHighScores(highScores, score);
+		addScore(highScores, score);
 	}
 	return 0;
 }

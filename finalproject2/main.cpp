@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <cstdlib>//used this library for srand function
+#include <fstream>//used for file handling
 using namespace std;
 
 //global variables or constants
@@ -12,6 +13,7 @@ const int backgroundStartX = 120;
 const int backgroundStartY = 60;
 sf::Color gameBoard[rows][columns];
 const sf::Color gridColor = sf::Color(25, 25, 112);
+int highScores[5] = { 0,0,0,0,0 };
 
 // initializing the grid
 int currentScore = 0;
@@ -141,6 +143,23 @@ int main() {
         }
     }
 
+    //initialise high scores array
+    ifstream inFile("HighScores.txt");
+    try {
+        if (!inFile) {
+            throw 420;
+        }
+        else {
+            for (int i = 0; i < 5 && !inFile.eof(); i++) {
+                inFile >> highScores[i];
+            }
+            inFile.close();
+        }
+    }
+    catch (int fileNotFound) {
+        cout << "HighScores.txt Not Found" << endl;
+    }
+
     //menu loop
     int choice = 3;
     while (choice == 2 || choice == 3) {
@@ -148,7 +167,7 @@ int main() {
         choice = menu();
 
         if (choice == 2) { //highscores
-            //view highscores
+            displayHighScores();
         }
         if (choice == 3) { //instructions
             displayInstructions();
@@ -177,7 +196,7 @@ int main() {
         window.draw(scoreVal);
         window.display();
 
-        //update high score
+        //update score
         changeScore();
 
         while (window.pollEvent(event)){
@@ -270,13 +289,15 @@ int main() {
                             }
                         }
                         window.display();
-                        //game over
-                        //window.close(); 
+                        //game over?
                     }
                 }
                 timer = 0;
             }
         }
+        //check win/lose condition
+        //gameOver();
+        //addScore(currentScore);
     }
     return 0;
 }
@@ -392,6 +413,12 @@ void initialiseGraphicsObjects() {
     scoreVal.setCharacterSize(30);
     scoreVal.setPosition(650, 350);
     scoreVal.setFillColor(sf::Color::White);
+
+    highscoresList.setFont(font);
+    highscoresList.setCharacterSize(40);
+    highscoresList.setFillColor(sf::Color::White);
+    highscoresList.setPosition(350, 150);
+    highscoresList.setLineSpacing(1.3);
 }
 int menu() {
     int choice = 1;
@@ -556,6 +583,59 @@ void changeScore() {
         scoreVal.setString(to_string(currentScore));
     }
 }
+void displayHighScores() {
+    string list;
+    for (int i = 0; i < 5 && highScores[i] != 0; i++) {
+        list += to_string(highScores[i]) + '\n';
+    }
+
+    list = list + '\n' + "Press Enter to exit";
+    highscoresList.setString(list);
+
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter) {
+                    return;
+                }
+            }
+            else if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+        window.clear();
+        window.draw(highscoresList);
+        window.display();
+    }
+}
+void addScore() {
+    int scores[6];
+    int temp;
+
+    for (int i = 0; i < 5; i++) {
+        scores[i] = highScores[i];
+    }
+    scores[5] = currentScore;
+    //copy high scores array and new score to new array
+
+    //bubble sort
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 5 - i; j++) {
+            if (scores[j] < scores[j + 1]) {
+                temp = scores[j];
+                scores[j] = scores[j + 1];
+                scores[j + 1] = temp;
+            }
+        }
+    }
+
+    //write first 5 scores to file
+    ofstream outFile("HighScores.txt");
+    for (int i = 0; i < 5; i++) {
+        outFile << scores[i] << " ";
+    }
+    outFile.close();
+}
 
 //member functions
 //base class
@@ -621,9 +701,7 @@ void Tetromino::getPosition(int& posX, int& posY) const {
     posX = x;
     posY = y;
 }
-const int (*Tetromino::getShape() const)[4] {
-    return shape;
-}
+
 bool Tetromino::isOccupied(int x, int y) {
     // checking whether there's alr a piece at the position (x, y)
 
@@ -651,6 +729,10 @@ bool Tetromino::movable(int newX, int newY) {
         }
     }
     return true;
+}
+
+const int (*Tetromino::getShape() const)[4] {
+    return shape;
 }
 sf::Color Tetromino::getColor() const {
     return color;
