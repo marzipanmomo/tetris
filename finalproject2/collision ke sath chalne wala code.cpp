@@ -12,6 +12,12 @@ const int columns = 10;
 const int rows = 20;
 const int backgroundStartX = 120;
 const int backgroundStartY = 60;
+//*****************
+sf::Color gameBoard[rows][columns];
+//***************
+
+// initializing the grid
+int currentScore = 0;
 
 //create window, user makes full screen to play, closes to end program
 sf::Event event;
@@ -23,7 +29,7 @@ sf::Text paused, resume, quit; //pause screen text objects
 sf::Text controlKeys; //instructions screen text object
 sf::Text score; //current score text object
 sf::Text highscoresList; //high scores screen text object
-
+sf::Text gameover;
 //function and class prototypes
 class Tetromino;
 class O;
@@ -44,7 +50,26 @@ public:
     Tetromino();
     virtual ~Tetromino();
     virtual void rotate() = 0;
+
+    /******************************************/
+    // function to check whether movement is possible without collision with the walls
+    bool movable(int newX, int newY);
+    bool isOccupied(int x, int y);
+    //adding getX and getY function
+    // i was not able to add it with the other member functions at the end so added them here
+    virtual int getX()
+    {
+        return x;
+    }
+    virtual int getY()
+    {
+        return y;
+    }
+    //***********************************
     void draw(sf::RenderWindow&, int);
+    sf::Color getColor() const;
+
+
 
     //move functions
     void moveDown();
@@ -101,21 +126,71 @@ void displayHighScores();
 void addScore();
 void displayInstructions();
 
+//*********** checking if current piece position is valid
+bool valid_position(Tetromino& piece) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (piece.getShape()[i][j]) {
+                int boardX = piece.getX() + j;
+                int boardY = piece.getY() + i;
+
+                // checking for collision with boundaries
+                if (boardX < 0 || boardX >= columns || boardY >= rows) {
+                    return false;
+                }
+
+                // Checking for collision with alr present  pieces 
+                if (boardY >= 0 && gameBoard[boardY][boardX] != sf::Color::Black)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+// holding the piece there once it gets to the bottom most position or if there's a collision
+void holdPiece(Tetromino& piece) {
+    int x, y;
+    piece.getPosition(x, y);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            const int (*shape)[4] = piece.getShape();
+            if (shape[i][j]) {
+                gameBoard[y + i][x + j] = piece.getColor(); // Set the color of the block
+            }
+        }
+    }
+}
+
+
+// ***************
+
 int main() {
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
 
     initialiseTextObjects();
 
     //background
+
+    background.setOutlineColor(sf::Color(176, 224, 230));
     background.setOutlineColor(sf::Color::Cyan);
     background.setOutlineThickness(5.f);
     background.setFillColor(sf::Color::Black);
     background.setPosition(backgroundStartX, backgroundStartY);
+    grid.setFillColor(sf::Color(0, 0, 54));
     grid.setFillColor(sf::Color(25, 25, 112));
     grid.setOutlineThickness(2.f);
     grid.setOutlineColor(sf::Color::Black);
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true);
+    // Initialize gameBoard with black (empty cells)
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            gameBoard[i][j] = sf::Color::Black;
+        }
+    }
 
     Tetromino* currentPiece = nullptr;
     float timer = 0;
@@ -153,67 +228,122 @@ int main() {
 
         //update high score
 
-        //downwards movement of tetrominoes
-        if (timer > delay) {
-            //this function helps to keep a constant time for the natural moving down of shape,
-            //it works by comparing the main timer with the declared delay.
-            currentPiece->moveDown();
-            timer = 0;
+
+        while (window.pollEvent(event))
+        {   //**********************************
+            // modified it a bit so it checks for collision first then moves
+            if (event.type == sf::Event::KeyPressed) {
+                // first checking if movement is valid then we can move according to the key pressed
+                if (event.key.code == sf::Keyboard::Left) {
+                    if (currentPiece->movable(currentPiece->getX() - 1, currentPiece->getY())) {
+                        currentPiece->moveLeft();
+                    }
+                }
+                if (event.key.code == sf::Keyboard::Right) {
+                    if (currentPiece->movable(currentPiece->getX() + 1, currentPiece->getY())) {
+                        currentPiece->moveRight();
+                    }
+                }
+                if (event.key.code == sf::Keyboard::Down) {
+                    if (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
+                        currentPiece->moveDown();
+                    }
+                }
+                if (event.key.code == sf::Keyboard::Up) {
+                    currentPiece->rotate();
+                    if (valid_position(*currentPiece)) {
+
+                    }
+                    else {
+
+                    }
+                }
+
+
+                if (event.key.code == sf::Keyboard::Escape) {
+                    pause();
+                }
+            }
+
+            //downwards movement of tetrominoes
+            if (timer > delay) {
+                //this function helps to keep a constant time for the natural moving down of shape,
+                //it works by comparing the main timer with the declared delay.
+                if (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
+                    currentPiece->moveDown();
+                }
+                else {
+                    holdPiece(*currentPiece);
+                    // Clear completed lines after placing the piece
+                    for (int i = rows - 1; i >= 0; --i) {
+                        bool fullLine = true;
+                        for (int j = 0; j < columns; ++j) {
+                            if (gameBoard[i][j] == sf::Color::Black) {
+                                fullLine = false;
+                                break;
+                            }
+                        }
+                        if (fullLine) {
+                            // Move all rows above down by one
+                            for (int k = i; k > 0; --k) {
+                                for (int j = 0; j < columns; ++j) {
+                                    gameBoard[k][j] = gameBoard[k - 1][j];
+                                }
+                            }
+                            // Clear the top row
+                            for (int j = 0; j < columns; ++j) {
+                                gameBoard[0][j] = sf::Color::Black;
+                            }
+                            i++; // Recheck the same row after shifting
+                        }
+                    }
+
+                    delete currentPiece;
+
+                    // spawning new piece at top center
+                    currentPiece = generateRandomPiece();
+                    currentPiece->setPosition(columns / 2 - 2, 0);
+
+                    if (!valid_position(*currentPiece)) {
+                        window.clear();
+                        window.draw(background);
+                        for (int i = 0; i < 20; ++i) {
+                            for (int j = 0; j < 10; ++j) {
+                                grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
+                                window.draw(grid);
+                            }
+                        }
+                        window.draw(gameover);
+                        window.display();
+
+
+                        window.close(); // game over
+
+                        // although added gameover object in intialize Text function but idk it's not working
+                         //*********************************
+                    }
+                }
+                timer = 0;
+            }
         }
 
         //redrawing background
-        window.clear(sf::Color::Black);//clearing the screen
-        window.draw(background);//draw the background
+        window.clear(sf::Color::Black);
+        window.draw(background);
         for (int i = 0; i < 20; ++i) {
             for (int j = 0; j < 10; ++j) {
                 grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
                 window.draw(grid);
             }
         }
-        currentPiece->draw(window, cellSize);//calling the function to draw the shape on screen finally..
-        window.display();//displaying the frames.
+        currentPiece->draw(window, cellSize);
+        window.display();
 
-        //check all the window's events that were triggered since the last iteration of the loop
-        //while there are pending events
-        while (window.pollEvent(event))
-        {
-            //check type of event
-            //"key pressed" event
-            if (event.type == sf::Event::KeyPressed) {
-                //redraw and move tetrominoes
-                if (event.key.code == sf::Keyboard::Left) {
-                    currentPiece->moveLeft();
-                }
-                else if (event.key.code == sf::Keyboard::Right) {
-                    currentPiece->moveRight();
-                }
-                else if (event.key.code == sf::Keyboard::Down) {
-                    currentPiece->moveDown();
-                }
-                else if (event.key.code == sf::Keyboard::Up) {
-                    currentPiece->rotate();
-                }
 
-                //check esc pressed- pause screen
-                else if (event.key.code == sf::Keyboard::Escape) {
-                    pause();
-                }
 
-            }
 
-            // "close requested" event: we close the window
-            else if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-
-            else {}
-        }
     }
-
-    //memory de allocation for the last active piece.
-    if (currentPiece != nullptr) {
-        delete currentPiece;
-    }
+    system("pause");
     return 0;
 }
 
@@ -300,6 +430,13 @@ void initialiseTextObjects() {
     controlKeys.setFillColor(sf::Color::White);
     controlKeys.setPosition(350, 150);
     controlKeys.setLineSpacing(1.2);
+
+
+    gameover.setFont(font);
+    gameover.setString("GAMEOVER");
+    gameover.setCharacterSize(45);
+    gameover.setPosition(400, 300);
+    gameover.setFillColor(sf::Color::Red);
 }
 int menu() {
     int choice = 1;
@@ -408,36 +545,65 @@ void displayInstructions() {
 
 //member functions
 //base class
-Tetromino::Tetromino() : x(0), y(0) {
+Tetromino::Tetromino() : x(0), y(0), color(sf::Color::Green) {  // Or any color
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             shape[i][j] = 0;
         }
     }
 }
+
 Tetromino::~Tetromino() {}
 void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
     sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
-    block.setFillColor(color);
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            if (shape[i][j] == 1) {
-                block.setPosition((x + j) * cellSize, (y + i) * cellSize);
-                window.draw(block);
+    {
+        //************************************
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < columns; ++x) {
+                if (gameBoard[y][x] != sf::Color::Transparent) {
+                    grid.setPosition(backgroundStartX + (x * cellSize),
+                        backgroundStartY + (y * cellSize));
+
+                    grid.setFillColor(gameBoard[y][x]);
+                    window.draw(grid);
+                }
+            }
+        }
+        //************************************
+        block.setFillColor(color);
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                if (shape[i][j] == 1) {
+                    int drawX = backgroundStartX + (x + j) * cellSize;
+                    int drawY = backgroundStartY + (y + i) * cellSize;
+
+                    if (drawX >= 0 && drawX < window.getSize().x &&
+                        drawY >= 0 && drawY < window.getSize().y) {
+                        block.setPosition(drawX, drawY);
+                        window.draw(block);
+                    }
+
+                }
             }
         }
     }
 }
 //move functions
-void Tetromino::moveDown() {
-    y++;
-}
-void Tetromino::moveLeft() {
-    x--;
-}
 void Tetromino::moveRight() {
-    x++;
+    if (movable(x + 1, y))
+        x++;
 }
+
+void Tetromino::moveLeft() {
+    if (movable(x - 1, y))
+        x--;
+}
+
+void Tetromino::moveDown() {
+    if (movable(x, y + 1))
+        y++;
+}
+
 void Tetromino::setPosition(int posX, int posY) {
     x = posX;
     y = posY;
@@ -449,6 +615,38 @@ void Tetromino::getPosition(int& posX, int& posY) const {
 const int (*Tetromino::getShape() const)[4] {
     return shape;
 }
+bool Tetromino::isOccupied(int x, int y) {
+    // checking whether there's alr a piece at the position (x, y)
+
+    return gameBoard[y][x] != sf::Color::Black;
+
+}
+bool Tetromino::movable(int newX, int newY) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (shape[i][j]) {
+                int boardX = newX + j;
+                int boardY = newY + i;
+
+                // check collision with boundaries
+                if (boardX < 0 || boardX >= columns || boardY >= rows || boardY < 0) {
+                    return false;
+                }
+
+                // Check collision with alr present pieces
+                if (boardY >= 0 && gameBoard[boardY][boardX] == sf::Color::Cyan) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+sf::Color Tetromino::getColor() const {
+    return color;
+}
+
+
 
 //derived classes
 O::O() {

@@ -1,19 +1,25 @@
 ﻿  main.cpp
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(169,86): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(169,51): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(302,32): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(257,16): warning C4101: 'fileNotFound': unreferenced local variable
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,66): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,66): warning C4244:         with
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,66): warning C4244:         [
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,66): warning C4244:             T=float
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,66): warning C4244:         ]
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,52): warning C4244:         with
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,52): warning C4244:         [
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,52): warning C4244:             T=float
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(420,52): warning C4244:         ]
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(425,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(425,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(352,1): warning C4715: 'menu': not all control paths return a value
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(172,86): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(172,51): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(267,102): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(267,67): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(375,32): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(330,16): warning C4101: 'fileNotFound': unreferenced local variable
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,66): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,66): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,66): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,66): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,66): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,52): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,52): warning C4244:         with
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,52): warning C4244:         [
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,52): warning C4244:             T=float
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(571,52): warning C4244:         ]
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(577,42): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(576,55): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(592,45): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(592,89): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(593,50): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(593,43): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\mariy\source\repos\finalproject2\finalproject2\main.cpp(443,1): warning C4715: 'menu': not all control paths return a value
   finalproject2.vcxproj -> C:\Users\mariy\source\repos\finalproject2\x64\Debug\finalproject2.exe
