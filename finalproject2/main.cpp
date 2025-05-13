@@ -229,7 +229,25 @@ int main() {
                 }
 
                 if (event.key.code == sf::Keyboard::Space) {
-                    //hard drop
+                    while (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
+                        currentPiece->moveDown();
+                    }
+                    // Lock the piece in place
+                    holdPiece(*currentPiece);
+                    lineClearing();
+
+                    //deallocate memory and generate new tetromino
+                    delete currentPiece;
+                    currentPiece = generateRandomPiece();
+                    currentPiece->setPosition(columns / 2 - 2, 0);
+
+                    // Check for game over
+                    if (!valid_position(*currentPiece)) {
+                        gameOver();
+                        addScore();
+                        window.close();
+                        return 0;
+                    }
                 }
 
                 //pause screen
