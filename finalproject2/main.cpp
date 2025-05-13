@@ -49,7 +49,7 @@ protected:
 public:
     Tetromino();
     virtual ~Tetromino();
-    virtual bool rotate(string) = 0;
+    virtual bool rotate(string);
     bool movable(int newX, int newY);
     bool isOccupied(int x, int y);
     virtual int getX();
@@ -74,32 +74,26 @@ public:
 class I :public Tetromino {
 public:
     I();
-    bool rotate(string) override;
 };
 class S :public Tetromino {
 public:
     S();
-    bool rotate(string) override;
 };
 class Z :public Tetromino {
 public:
     Z();
-    bool rotate(string) override;
 };
 class L :public Tetromino {
 public:
     L();
-    bool rotate(string) override;
 };
 class J :public Tetromino {
 public:
     J();
-    bool rotate(string) override;
 };
 class T :public Tetromino {
 public:
     T();
-    bool rotate(string) override;
 };
 
 //functions
@@ -780,24 +774,17 @@ int Tetromino::getY() {
     return y;
 }
 
-//derived classes
-O::O() {
-    color = sf::Color::Yellow;
-    shape[0][0] = 1;
-    shape[0][1] = 1;
-    shape[1][0] = 1;
-    shape[1][1] = 1;
-}
-bool O::rotate(string direction) {
-    // Save current shape
+bool Tetromino::rotate(string direction) {
     int oldShape[4][4];
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             oldShape[i][j] = shape[i][j];
         }
     }
+
     int newShape[4][4] = { 0 };
-    // Perform rotation
+
+    // Performiing rotation to 90 degree
     if (direction == "right") {
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
@@ -813,16 +800,16 @@ bool O::rotate(string direction) {
         }
     }
 
-    // Try the new rotation
+    // Trying the new rotation
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             shape[i][j] = newShape[i][j];
         }
     }
 
-    // Check if rotation is valid
+    // Checking if rotation is valid(to ignore wall kicks and piece overdrawing)
     if (!valid_position(*this)) {
-        // Revert if invalid
+        // Reverting if invalid
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
                 shape[i][j] = oldShape[i][j];
@@ -830,6 +817,18 @@ bool O::rotate(string direction) {
         }
         return false;
     }
+    return true;
+}
+
+//derived classes
+O::O() {
+    color = sf::Color::Yellow;
+    shape[0][0] = 1;
+    shape[0][1] = 1;
+    shape[1][0] = 1;
+    shape[1][1] = 1;
+}
+bool O::rotate(string direction) {
     return true;
 }
 
@@ -840,51 +839,6 @@ I::I() {
     shape[1][2] = 1;
     shape[1][3] = 1;
 }
-bool I::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
-}
 
 S::S() {
     color = sf::Color::Green;
@@ -892,51 +846,6 @@ S::S() {
     shape[0][2] = 1;
     shape[1][0] = 1;
     shape[1][1] = 1;
-}
-bool S::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
 }
 
 Z::Z() {
@@ -946,51 +855,6 @@ Z::Z() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool Z::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
-}
 
 L::L() {
     color = sf::Color::Cyan;
@@ -998,51 +862,6 @@ L::L() {
     shape[1][0] = 1;
     shape[1][1] = 1;
     shape[1][2] = 1;
-}
-bool L::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
 }
 
 J::J() {
@@ -1053,51 +872,6 @@ J::J() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-bool J::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
-}
 
 T::T() {
     color = sf::Color(128, 0, 128);
@@ -1105,49 +879,4 @@ T::T() {
     shape[1][0] = 1;
     shape[1][1] = 1;
     shape[1][2] = 1;
-}
-bool T::rotate(string direction) {
-    // Save current shape
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-    // Perform rotation
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Try the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Check if rotation is valid
-    if (!valid_position(*this)) {
-        // Revert if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
 }

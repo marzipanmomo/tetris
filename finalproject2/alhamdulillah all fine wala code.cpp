@@ -1,35 +1,35 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <cstdlib>//used this library for srand function
+#include <fstream>//used for file handling
 using namespace std;
 
 //global variables or constants
-
-//this represents the shape size (20 pixels)
-const int cellSize = 30;
+const int cellSize = 30; //this represents the shape size (30 pixels)
 //board
 const int columns = 10;
 const int rows = 20;
 const int backgroundStartX = 120;
 const int backgroundStartY = 60;
-//*****************
 sf::Color gameBoard[rows][columns];
-//***************
+const sf::Color gridColor = sf::Color(25, 25, 112);
+int highScores[5] = { 0,0,0,0,0 };
 
 // initializing the grid
 int currentScore = 0;
+int previousScore = 0;
 
-//create window, user makes full screen to play, closes to end program
+sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default); //create window, user makes full screen to play, closes to end program
 sf::Event event;
-sf::RenderWindow window(sf::VideoMode({ 1000, 700 }), "tetris", sf::Style::Default);
 sf::RectangleShape background(sf::Vector2f(300.f, 600.f)), grid(sf::Vector2f(cellSize - 1, cellSize - 1));
 sf::Font font;
 sf::Text tetris, play, highscores, instructions; //menu text objects
 sf::Text paused, resume, quit; //pause screen text objects
 sf::Text controlKeys; //instructions screen text object
-sf::Text score; //current score text object
+sf::Text score, scoreVal; //current score text object
 sf::Text highscoresList; //high scores screen text object
-sf::Text gameover;
+sf::Text gameover; //game over text object
+
 //function and class prototypes
 class Tetromino;
 class O;
@@ -49,27 +49,13 @@ protected:
 public:
     Tetromino();
     virtual ~Tetromino();
-    virtual void rotate() = 0;
-
-    /******************************************/
-    // function to check whether movement is possible without collision with the walls
+    virtual bool rotate(string direction);
     bool movable(int newX, int newY);
     bool isOccupied(int x, int y);
-    //adding getX and getY function
-    // i was not able to add it with the other member functions at the end so added them here
-    virtual int getX()
-    {
-        return x;
-    }
-    virtual int getY()
-    {
-        return y;
-    }
-    //***********************************
+    virtual int getX();
+    virtual int getY();
     void draw(sf::RenderWindow&, int);
     sf::Color getColor() const;
-
-
 
     //move functions
     void moveDown();
@@ -83,126 +69,92 @@ public:
 class O :public Tetromino {
 public:
     O();
-    void rotate() override;
+    bool rotate(string) override ;
 };
 class I :public Tetromino {
 public:
     I();
-    void rotate() override;
 };
 class S :public Tetromino {
 public:
     S();
-    void rotate() override;
 };
 class Z :public Tetromino {
 public:
     Z();
-    void rotate() override;
 };
 class L :public Tetromino {
 public:
     L();
-    void rotate();
 };
 class J :public Tetromino {
 public:
     J();
-    void rotate() override;
 };
 class T :public Tetromino {
 public:
     T();
-    void rotate() override;
 };
 
 //functions
 Tetromino* generateRandomPiece();
-void initialiseTextObjects();
+void initialiseGraphicsObjects();
 int menu();
 void pause();
-void displayScore();
+void changeScore();
 void displayHighScores();
 void addScore();
 void displayInstructions();
-
-//*********** checking if current piece position is valid
-bool valid_position(Tetromino& piece) {
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            if (piece.getShape()[i][j]) {
-                int boardX = piece.getX() + j;
-                int boardY = piece.getY() + i;
-
-                // checking for collision with boundaries
-                if (boardX < 0 || boardX >= columns || boardY >= rows) {
-                    return false;
-                }
-
-                // Checking for collision with alr present  pieces 
-                if (boardY >= 0 && gameBoard[boardY][boardX] != sf::Color::Black)
-                {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-}
-
-// holding the piece there once it gets to the bottom most position or if there's a collision
-void holdPiece(Tetromino& piece) {
-    int x, y;
-    piece.getPosition(x, y);
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            const int (*shape)[4] = piece.getShape();
-            if (shape[i][j]) {
-                gameBoard[y + i][x + j] = piece.getColor(); // Set the color of the block
-            }
-        }
-    }
-}
-
-
-// ***************
+bool valid_position(Tetromino&);
+void holdPiece(Tetromino&);
+void gameOver();
+void lineClearing();
 
 int main() {
+    int iterations = 0;
     srand(static_cast<unsigned>(time(nullptr)));//used for srands usage.
 
-    initialiseTextObjects();
+    //initialising text and background settings
+    initialiseGraphicsObjects();
 
-    //background
-
-    background.setOutlineColor(sf::Color(176, 224, 230));
-    background.setOutlineColor(sf::Color::Cyan);
-    background.setOutlineThickness(5.f);
-    background.setFillColor(sf::Color::Black);
-    background.setPosition(backgroundStartX, backgroundStartY);
-    grid.setFillColor(sf::Color(0, 0, 54));
-    grid.setFillColor(sf::Color(25, 25, 112));
-    grid.setOutlineThickness(2.f);
-    grid.setOutlineColor(sf::Color::Black);
     //synchronise frame rate with vertical frequency of monitor
     window.setVerticalSyncEnabled(true);
-    // Initialize gameBoard with black (empty cells)
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < columns; ++j) {
-            gameBoard[i][j] = sf::Color::Black;
-        }
-    }
 
     Tetromino* currentPiece = nullptr;
     float timer = 0;
-    float delay = 0.5;//you can change this to decrease or increase the speed of the falling of shape.
+    float delay = 0.5; //you can change this to decrease or increase the speed of the falling of shape.
 
     currentPiece = generateRandomPiece();
-    int startX = 6;
-    int startY = 3;
+    int startX = 4;
+    int startY = 1;
     currentPiece->setPosition(startX, startY);
     currentPiece->getPosition(startX, startY);
     sf::Clock clock;
     //This segment handles time management in game's main loop.
+
+    // Initialize gameBoard with grid colour
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            gameBoard[i][j] = gridColor;
+        }
+    }
+
+    //initialise high scores array
+    ifstream inFile("HighScores.txt");
+    try {
+        if (!inFile) {
+            throw 420;
+        }
+        else {
+            for (int i = 0; i < 5 && !inFile.eof(); i++) {
+                inFile >> highScores[i];
+            }
+            inFile.close();
+        }
+    }
+    catch (int fileNotFound) {
+        cout << "HighScores.txt Not Found" << endl;
+    }
 
     //menu loop
     int choice = 3;
@@ -211,27 +163,40 @@ int main() {
         choice = menu();
 
         if (choice == 2) { //highscores
-            //view highscores
+            displayHighScores();
         }
         if (choice == 3) { //instructions
             displayInstructions();
         }
-
     }
+
     //game loop
-    while (window.isOpen())
-    {
+    while (window.isOpen()) {
         //to stop pieces falling too fast and prevent flickering
-        float time = clock.getElapsedTime().asSeconds();//to get the time since last frame
-        clock.restart();//to reset the clock.
-        timer += time;//to get the time passed.
+        float time = clock.getElapsedTime().asSeconds();
+        clock.restart();
+        timer += time;
 
-        //update high score
+        //redrawing background
+        window.clear(sf::Color::Black);//clearing the screen
+        window.draw(background);//draw the background
+        for (int i = 0; i < 20; ++i) {
+            for (int j = 0; j < 10; ++j) {
+                grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
+                window.draw(grid);
+            }
+        }
+        //redrawing tetromino
+        currentPiece->draw(window, cellSize);
+        window.draw(score);
+        window.draw(scoreVal);
+        window.display();
 
+        //update score
+        changeScore();
 
-        while (window.pollEvent(event))
-        {   //**********************************
-            // modified it a bit so it checks for collision first then moves
+        while (window.pollEvent(event)) {
+            
             if (event.type == sf::Event::KeyPressed) {
                 // first checking if movement is valid then we can move according to the key pressed
                 if (event.key.code == sf::Keyboard::Left) {
@@ -250,100 +215,75 @@ int main() {
                     }
                 }
                 if (event.key.code == sf::Keyboard::Up) {
-                    currentPiece->rotate();
-                    if (valid_position(*currentPiece)) {
+                    currentPiece->rotate("right");
+                }
 
+                if (event.key.code == sf::Keyboard::Key::Z) {
+                    currentPiece->rotate("left");
+                }
+
+                if (event.key.code == sf::Keyboard::Space) {
+                    while (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
+                        currentPiece->moveDown();
                     }
-                    else {
+                    // Lock the piece in place
+                    holdPiece(*currentPiece);
+                    lineClearing();
 
+                    //deallocate memory and generate new tetromino
+                    delete currentPiece;
+                    currentPiece = generateRandomPiece();
+                    currentPiece->setPosition(columns / 2 - 2, 0);
+
+                    // Check for game over
+                    if (!valid_position(*currentPiece)) {
+                        gameOver();
+                        addScore();
+                        window.close();
+                        return 0;
                     }
                 }
 
-
+                //pause screen
                 if (event.key.code == sf::Keyboard::Escape) {
                     pause();
                 }
             }
 
+            else if (event.type == sf::Event::Closed) {
+                addScore();
+                gameOver();
+                window.close();
+            }
+
             //downwards movement of tetrominoes
+            //Natural movement down
             if (timer > delay) {
-                //this function helps to keep a constant time for the natural moving down of shape,
-                //it works by comparing the main timer with the declared delay.
+                timer = 0;
                 if (currentPiece->movable(currentPiece->getX(), currentPiece->getY() + 1)) {
                     currentPiece->moveDown();
                 }
                 else {
+                    // Lock the piece in place
                     holdPiece(*currentPiece);
-                    // Clear completed lines after placing the piece
-                    for (int i = rows - 1; i >= 0; --i) {
-                        bool fullLine = true;
-                        for (int j = 0; j < columns; ++j) {
-                            if (gameBoard[i][j] == sf::Color::Black) {
-                                fullLine = false;
-                                break;
-                            }
-                        }
-                        if (fullLine) {
-                            // Move all rows above down by one
-                            for (int k = i; k > 0; --k) {
-                                for (int j = 0; j < columns; ++j) {
-                                    gameBoard[k][j] = gameBoard[k - 1][j];
-                                }
-                            }
-                            // Clear the top row
-                            for (int j = 0; j < columns; ++j) {
-                                gameBoard[0][j] = sf::Color::Black;
-                            }
-                            i++; // Recheck the same row after shifting
-                        }
-                    }
+                    lineClearing();
 
+                    //deallocate memory and generate new tetromino
                     delete currentPiece;
-
-                    // spawning new piece at top center
                     currentPiece = generateRandomPiece();
                     currentPiece->setPosition(columns / 2 - 2, 0);
 
+                    // Check for game over
                     if (!valid_position(*currentPiece)) {
-                        window.clear();
-                        window.draw(background);
-                        for (int i = 0; i < 20; ++i) {
-                            for (int j = 0; j < 10; ++j) {
-                                grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
-                                window.draw(grid);
-                            }
-                        }
-                        window.draw(gameover);
-                        window.display();
-
-
-                        window.close(); // game over
-
-                        // although added gameover object in intialize Text function but idk it's not working
-                         //*********************************
+                        gameOver();
+                        addScore();
+                        window.close();
+                        return 0;
                     }
                 }
-                timer = 0;
             }
         }
-
-        //redrawing background
-        window.clear(sf::Color::Black);
-        window.draw(background);
-        for (int i = 0; i < 20; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                grid.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
-                window.draw(grid);
-            }
-        }
-        currentPiece->draw(window, cellSize);
-        window.display();
-
-
-
-
     }
-    system("pause");
     return 0;
 }
 
@@ -377,7 +317,18 @@ Tetromino* generateRandomPiece() {
         return new I();
     }
 }
-void initialiseTextObjects() {
+
+void initialiseGraphicsObjects() {
+    //background
+    background.setOutlineColor(sf::Color(176, 224, 230));
+    background.setOutlineColor(sf::Color::Cyan);
+    background.setOutlineThickness(5.f);
+    background.setFillColor(sf::Color::Black);
+    background.setPosition(backgroundStartX, backgroundStartY);
+    grid.setFillColor(gridColor);
+    grid.setOutlineThickness(1.f);
+    grid.setOutlineColor(sf::Color::Black);
+
     //these settings wont change
     try {
         if (!font.loadFromFile("Pixellettersfull.ttf")) {
@@ -431,13 +382,31 @@ void initialiseTextObjects() {
     controlKeys.setPosition(350, 150);
     controlKeys.setLineSpacing(1.2);
 
-
     gameover.setFont(font);
     gameover.setString("GAMEOVER");
     gameover.setCharacterSize(45);
     gameover.setPosition(400, 300);
     gameover.setFillColor(sf::Color::Red);
+
+    score.setFont(font);
+    score.setString("Score");
+    score.setCharacterSize(30);
+    score.setPosition(650, 300);
+    score.setFillColor(sf::Color::White);
+
+    scoreVal.setFont(font);
+    scoreVal.setString("0");
+    scoreVal.setCharacterSize(30);
+    scoreVal.setPosition(650, 350);
+    scoreVal.setFillColor(sf::Color::White);
+
+    highscoresList.setFont(font);
+    highscoresList.setCharacterSize(40);
+    highscoresList.setFillColor(sf::Color::White);
+    highscoresList.setPosition(350, 150);
+    highscoresList.setLineSpacing(1.3);
 }
+
 int menu() {
     int choice = 1;
     //initial colours, reset every time menu called
@@ -487,6 +456,7 @@ int menu() {
         }
     }
 }
+
 void pause() {
     int choice = 1;
     //initial colours
@@ -510,10 +480,12 @@ void pause() {
                         return;
                     }
                     else if (choice == 2) {
-                        window.close();
+                        addScore();
+                        gameOver();
                     }
                 }
                 else if (event.type == sf::Event::Closed) {
+                    addScore();
                     window.close();
                 }
             }
@@ -525,6 +497,7 @@ void pause() {
         window.display();
     }
 }
+
 void displayInstructions() {
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
@@ -543,6 +516,159 @@ void displayInstructions() {
     }
 }
 
+bool valid_position(Tetromino& piece) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (piece.getShape()[i][j]) {
+                int boardX = piece.getX() + j;
+                int boardY = piece.getY() + i;
+
+                if (boardX < 0 || boardX >= columns || boardY >= rows) {
+                    return false;
+                }
+
+                //changing from back color to our grid color detection
+                if (boardY >= 0 && gameBoard[boardY][boardX] != gridColor) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+void holdPiece(Tetromino& piece) {
+    int x, y;
+    piece.getPosition(x, y);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            const int (*shape)[4] = piece.getShape();
+            if (shape[i][j]) {
+                // Only place the piece if it's within bounds
+                if (y + i >= 0 && y + i < rows && x + j >= 0 && x + j < columns) {
+                    gameBoard[y + i][x + j] = piece.getColor();
+                }
+            }
+        }
+    }
+}
+
+void gameOver() {
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter) {
+                    window.close();
+                }
+            }
+            else if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+        window.clear();
+        window.draw(gameover);
+        window.display();
+    }
+}
+
+void changeScore() {
+    if (previousScore != currentScore) {
+        previousScore = currentScore;
+        scoreVal.setString(to_string(currentScore));
+    }
+}
+
+void displayHighScores() {
+    string list;
+    for (int i = 0; i < 5 && highScores[i] != 0; i++) {
+        list += to_string(highScores[i]) + '\n';
+    }
+
+    list = list + '\n' + "Press Enter to exit";
+    highscoresList.setString(list);
+
+    while (window.isOpen()) {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Enter) {
+                    return;
+                }
+            }
+            else if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+        window.clear();
+        window.draw(highscoresList);
+        window.display();
+    }
+}
+
+void addScore() {
+    int tempScores[6];
+    int temp;
+
+    for (int i = 0; i < 5; i++) {
+        tempScores[i] = highScores[i];
+    }
+    tempScores[5] = currentScore;
+
+    //bubble sort previous values as well as current score
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 5 - i; j++) {
+            if (tempScores[j] < tempScores[j + 1]) {
+                temp = tempScores[j];
+                tempScores[j] = tempScores[j + 1];
+                tempScores[j + 1] = temp;
+            }
+        }
+    }
+
+    //write first 5 scores to file
+    try {
+        ofstream outFile("HighScores.txt");
+        if (outFile) {
+            for (int i = 0; i < 5; i++) {
+                outFile << tempScores[i] << " ";
+            }
+            outFile.close();
+        }
+        else {
+            throw 420;
+        }
+    }
+    catch (int fileNotFound) {
+        cout << "HighScores.txt not found" << endl;
+    }
+}
+
+void lineClearing() {
+    // Clear completed lines
+    for (int i = rows - 1; i >= 0; --i) {
+        bool fullLine = true;
+        for (int j = 0; j < columns; ++j) {
+            if (gameBoard[i][j] == gridColor) {
+                fullLine = false;
+                break;
+            }
+        }
+        if (fullLine) {
+            // Move all rows above down by one
+            for (int k = i; k > 0; --k) {
+                for (int j = 0; j < columns; ++j) {
+                    gameBoard[k][j] = gameBoard[k - 1][j];
+                }
+            }
+            // Clear the top row
+            for (int j = 0; j < columns; ++j) {
+                gameBoard[0][j] = gridColor;
+            }
+            i++; // Recheck the same row after shifting
+            currentScore += 100;
+        }
+    }
+}
+
 //member functions
 //base class
 Tetromino::Tetromino() : x(0), y(0), color(sf::Color::Green) {  // Or any color
@@ -552,53 +678,92 @@ Tetromino::Tetromino() : x(0), y(0), color(sf::Color::Green) {  // Or any color
         }
     }
 }
-
 Tetromino::~Tetromino() {}
-void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
-    sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
-    {
-        //************************************
-        for (int y = 0; y < rows; ++y) {
-            for (int x = 0; x < columns; ++x) {
-                if (gameBoard[y][x] != sf::Color::Transparent) {
-                    grid.setPosition(backgroundStartX + (x * cellSize),
-                        backgroundStartY + (y * cellSize));
 
-                    grid.setFillColor(gameBoard[y][x]);
-                    window.draw(grid);
-                }
+void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
+    // First draw all the locked pieces from gameBoard
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            if (gameBoard[i][j] != gridColor) {
+                sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
+                block.setFillColor(gameBoard[i][j]);
+                block.setPosition(backgroundStartX + (j * cellSize), backgroundStartY + (i * cellSize));
+                window.draw(block);
             }
         }
-        //************************************
-        block.setFillColor(color);
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                if (shape[i][j] == 1) {
-                    int drawX = backgroundStartX + (x + j) * cellSize;
-                    int drawY = backgroundStartY + (y + i) * cellSize;
+    }
 
-                    if (drawX >= 0 && drawX < window.getSize().x &&
-                        drawY >= 0 && drawY < window.getSize().y) {
-                        block.setPosition(drawX, drawY);
-                        window.draw(block);
-                    }
+    // Then draw the current moving piece
+    sf::RectangleShape block(sf::Vector2f(cellSize - 1, cellSize - 1));
+    block.setFillColor(color);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (shape[i][j] == 1) {
+                int drawX = backgroundStartX + (x + j) * cellSize;
+                int drawY = backgroundStartY + (y + i) * cellSize;
 
+                if (drawX >= 0 && drawX < window.getSize().x && drawY >= 0 && drawY < window.getSize().y) {
+                    block.setPosition(drawX, drawY);
+                    window.draw(block);
                 }
             }
         }
     }
+}
+bool Tetromino::rotate(string direction) {
+    int oldShape[4][4];
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            oldShape[i][j] = shape[i][j];
+        }
+    }
+
+    int newShape[4][4] = { 0 };
+
+    // Performiing rotation to 90 degree
+    if (direction == "right") {
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                newShape[i][j] = oldShape[3 - j][i];
+            }
+        }
+    }
+    else if (direction == "left") {
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                newShape[i][j] = oldShape[j][3 - i];
+            }
+        }
+    }
+
+    // Trying the new rotation
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            shape[i][j] = newShape[i][j];
+        }
+    }
+
+    // Checking if rotation is valid(to ignore wall kicks and piece overdrawing)
+    if (!valid_position(*this)) {
+        // Reverting if invalid
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                shape[i][j] = oldShape[i][j];
+            }
+        }
+        return false;
+    }
+    return true;
 }
 //move functions
 void Tetromino::moveRight() {
     if (movable(x + 1, y))
         x++;
 }
-
 void Tetromino::moveLeft() {
     if (movable(x - 1, y))
         x--;
 }
-
 void Tetromino::moveDown() {
     if (movable(x, y + 1))
         y++;
@@ -612,9 +777,7 @@ void Tetromino::getPosition(int& posX, int& posY) const {
     posX = x;
     posY = y;
 }
-const int (*Tetromino::getShape() const)[4] {
-    return shape;
-}
+
 bool Tetromino::isOccupied(int x, int y) {
     // checking whether there's alr a piece at the position (x, y)
 
@@ -628,13 +791,12 @@ bool Tetromino::movable(int newX, int newY) {
                 int boardX = newX + j;
                 int boardY = newY + i;
 
-                // check collision with boundaries
                 if (boardX < 0 || boardX >= columns || boardY >= rows || boardY < 0) {
                     return false;
                 }
 
-                // Check collision with alr present pieces
-                if (boardY >= 0 && gameBoard[boardY][boardX] == sf::Color::Cyan) {
+                //using grid color here
+                if (boardY >= 0 && gameBoard[boardY][boardX] != gridColor) {
                     return false;
                 }
             }
@@ -642,11 +804,19 @@ bool Tetromino::movable(int newX, int newY) {
     }
     return true;
 }
+
+const int (*Tetromino::getShape() const)[4] {
+    return shape;
+}
 sf::Color Tetromino::getColor() const {
     return color;
 }
-
-
+int Tetromino::getX() {
+    return x;
+}
+int Tetromino::getY() {
+    return y;
+}
 
 //derived classes
 O::O() {
@@ -656,8 +826,9 @@ O::O() {
     shape[1][0] = 1;
     shape[1][1] = 1;
 }
-void O::rotate() {
-    //rotating this shape would not make a difference
+bool O::rotate(string direction) {
+    // Save current shape
+    return true;
 }
 
 I::I() {
@@ -667,31 +838,7 @@ I::I() {
     shape[1][2] = 1;
     shape[1][3] = 1;
 }
-void I::rotate() {
-    //making a temporary variable naming it current shape,this variable is used for the sub classes of each shape to handle the rotation purpose.
-    int Crrshape[4][4];
 
-    //loop to copy the same shape into temporary matrix.
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-
-    //loop to clear the matrix so that we can store new values afterwards.
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-
-    //the loop too rotate the shape into 90 degree,hoping this works fine when i run the code.
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
-}
 
 S::S() {
     color = sf::Color::Green;
@@ -699,26 +846,6 @@ S::S() {
     shape[0][2] = 1;
     shape[1][0] = 1;
     shape[1][1] = 1;
-}
-void S::rotate() {
-    int Crrshape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
 }
 
 Z::Z() {
@@ -728,26 +855,6 @@ Z::Z() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-void Z::rotate() {
-    int Crrshape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
-}
 
 L::L() {
     color = sf::Color::Cyan;
@@ -755,24 +862,6 @@ L::L() {
     shape[1][0] = 1;
     shape[1][1] = 1;
     shape[1][2] = 1;
-}
-void L::rotate() {
-    int Crrshape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
 }
 
 J::J() {
@@ -783,27 +872,7 @@ J::J() {
     shape[1][1] = 1;
     shape[1][2] = 1;
 }
-void J::rotate() {
-    int Crrshape[4][4];
 
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
-}
 
 T::T() {
     color = sf::Color(128, 0, 128);
@@ -811,24 +880,4 @@ T::T() {
     shape[1][0] = 1;
     shape[1][1] = 1;
     shape[1][2] = 1;
-}
-void T::rotate() {
-    int Crrshape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            Crrshape[i][j] = shape[i][j];
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = Crrshape[3 - j][i];
-        }
-    }
 }
