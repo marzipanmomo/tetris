@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cstdlib>//used this library for srand function
 #include <fstream>//used for file handling
+#include <Windows.h>//used for PlaySound()
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 using namespace std;
 
 //global variables or constants
@@ -49,7 +52,7 @@ protected:
 public:
     Tetromino();
     virtual ~Tetromino();
-    virtual bool rotate(string);
+    virtual bool rotate(string direction);
     bool movable(int newX, int newY);
     bool isOccupied(int x, int y);
     virtual int getX();
@@ -196,7 +199,7 @@ int main() {
         changeScore();
 
         while (window.pollEvent(event)) {
-            
+
             if (event.type == sf::Event::KeyPressed) {
                 // first checking if movement is valid then we can move according to the key pressed
                 if (event.key.code == sf::Keyboard::Left) {
@@ -237,6 +240,7 @@ int main() {
 
                     // Check for game over
                     if (!valid_position(*currentPiece)) {
+                        PlaySound(TEXT("gameover"), NULL, SND_FILENAME | SND_ASYNC);
                         gameOver();
                         addScore();
                         window.close();
@@ -252,7 +256,6 @@ int main() {
 
             else if (event.type == sf::Event::Closed) {
                 addScore();
-                gameOver();
                 window.close();
             }
 
@@ -275,6 +278,7 @@ int main() {
 
                     // Check for game over
                     if (!valid_position(*currentPiece)) {
+                        PlaySound(TEXT("gameover"), NULL, SND_FILENAME | SND_ASYNC);
                         gameOver();
                         addScore();
                         window.close();
@@ -418,6 +422,7 @@ int menu() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Enter) { //enter
+                    PlaySound(TEXT("button"), NULL, SND_FILENAME | SND_ASYNC);
                     return choice;
                 }
 
@@ -477,9 +482,11 @@ void pause() {
                 }
                 if (event.key.code == sf::Keyboard::Enter) {
                     if (choice == 1) {
+                        PlaySound(TEXT("button"), NULL, SND_FILENAME | SND_ASYNC);
                         return;
                     }
                     else if (choice == 2) {
+                        PlaySound(TEXT("gameover"), NULL, SND_FILENAME | SND_ASYNC);
                         addScore();
                         gameOver();
                     }
@@ -575,6 +582,7 @@ void changeScore() {
     if (previousScore != currentScore) {
         previousScore = currentScore;
         scoreVal.setString(to_string(currentScore));
+        PlaySound(TEXT("point"), NULL, SND_FILENAME | SND_ASYNC);
     }
 }
 
@@ -644,6 +652,7 @@ void addScore() {
 
 void lineClearing() {
     // Clear completed lines
+    PlaySound(TEXT("lineclear"), NULL, SND_FILENAME | SND_ASYNC);
     for (int i = rows - 1; i >= 0; --i) {
         bool fullLine = true;
         for (int j = 0; j < columns; ++j) {
@@ -710,7 +719,51 @@ void Tetromino::draw(sf::RenderWindow& window, int cellSize) {
         }
     }
 }
+bool Tetromino::rotate(string direction) {
+    int oldShape[4][4];
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            oldShape[i][j] = shape[i][j];
+        }
+    }
 
+    int newShape[4][4] = { 0 };
+
+    // Performiing rotation to 90 degree
+    if (direction == "right") {
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                newShape[i][j] = oldShape[3 - j][i];
+            }
+        }
+    }
+    else if (direction == "left") {
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                newShape[i][j] = oldShape[j][3 - i];
+            }
+        }
+    }
+
+    // Trying the new rotation
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            shape[i][j] = newShape[i][j];
+        }
+    }
+
+    // Checking if rotation is valid(to ignore wall kicks and piece overdrawing)
+    if (!valid_position(*this)) {
+        // Reverting if invalid
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                shape[i][j] = oldShape[i][j];
+            }
+        }
+        return false;
+    }
+    return true;
+}
 //move functions
 void Tetromino::moveRight() {
     if (movable(x + 1, y))
@@ -774,52 +827,6 @@ int Tetromino::getY() {
     return y;
 }
 
-bool Tetromino::rotate(string direction) {
-    int oldShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            oldShape[i][j] = shape[i][j];
-        }
-    }
-
-    int newShape[4][4] = { 0 };
-
-    // Performiing rotation to 90 degree
-    if (direction == "right") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[3 - j][i];
-            }
-        }
-    }
-    else if (direction == "left") {
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                newShape[i][j] = oldShape[j][3 - i];
-            }
-        }
-    }
-
-    // Trying the new rotation
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            shape[i][j] = newShape[i][j];
-        }
-    }
-
-    // Checking if rotation is valid(to ignore wall kicks and piece overdrawing)
-    if (!valid_position(*this)) {
-        // Reverting if invalid
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                shape[i][j] = oldShape[i][j];
-            }
-        }
-        return false;
-    }
-    return true;
-}
-
 //derived classes
 O::O() {
     color = sf::Color::Yellow;
@@ -829,6 +836,7 @@ O::O() {
     shape[1][1] = 1;
 }
 bool O::rotate(string direction) {
+    // Save current shape
     return true;
 }
 
